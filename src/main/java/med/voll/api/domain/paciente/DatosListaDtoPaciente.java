@@ -1,7 +1,4 @@
-package med.voll.api.paciente;
-
-import med.voll.api.medico.Medico;
-import med.voll.api.paciente.Paciente;
+package med.voll.api.domain.paciente;
 
 public record DatosListaDtoPaciente(
 
