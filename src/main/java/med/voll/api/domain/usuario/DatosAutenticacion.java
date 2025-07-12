@@ -1,4 +1,5 @@
 package med.voll.api.domain.usuario;
 
-public record DatosAutenticacion() {
+public record DatosAutenticacion(String login, String contrasena) {
+
 }
