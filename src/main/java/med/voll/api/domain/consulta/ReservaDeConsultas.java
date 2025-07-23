@@ -1,12 +1,15 @@
 package med.voll.api.domain.consulta;
 
-import jakarta.validation.ValidationException;
 import med.voll.api.domain.ValidacionException;
+import med.voll.api.domain.consulta.validaciones.cancelamiento.ValidadorCancelamientoDeConsulta;
+import med.voll.api.domain.consulta.validaciones.reservar.ValidadorDeConsultas;
 import med.voll.api.domain.medico.Medico;
 import med.voll.api.domain.medico.MedicoRepository;
 import med.voll.api.domain.paciente.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ReservaDeConsultas {
@@ -20,7 +23,13 @@ public class ReservaDeConsultas {
     @Autowired
     private ConsultaRepository consultaRepository;
 
-    public void reservar(DatosReservaConsulta datos){
+    @Autowired
+    private List<ValidadorDeConsultas> validadores;
+
+    @Autowired
+    private List<ValidadorCancelamientoDeConsulta> validadoresCancelamiento;
+
+    public DatosDetalleConsulta reservar(DatosReservaConsulta datos){
 
         if (!pacienteRepository.existsById(datos.idPaciente())){
             throw new ValidacionException("No existe un Paciente con el id introducido");
@@ -30,13 +39,22 @@ public class ReservaDeConsultas {
             throw new ValidacionException("No existe un Medico con el id introducido");
         }
 
+        // validaciones
+        validadores.forEach(v ->v.validar(datos));
+
         var medico = elegirMedico(datos);
-                //.orElseThrow(() -> new RuntimeException("ID de médico no válido"));
+        if (medico == null){
+            throw new ValidacionException("⚠️ No existe un Medico Disponible!");
+        }
         var paciente = pacienteRepository.findById(datos.idPaciente()).get();
-                //.orElseThrow(() -> new RuntimeException("ID de paciente no válido"));
         var consulta = new Consulta(null, medico, paciente, datos.fecha(), null);
-        consultaRepository  .save(consulta);
+        consultaRepository.save(consulta);
+        return new DatosDetalleConsulta(consulta);
     }
+
+
+
+
 
 
     private Medico elegirMedico(DatosReservaConsulta datos) {
@@ -58,6 +76,8 @@ public class ReservaDeConsultas {
         if (!consultaRepository.existsById(datos.idConsulta())){
             throw new ValidacionException("Id e la consulta no informado no existe!!");
         }
+        validadoresCancelamiento.forEach(v -> v.validar(datos));
+
         var consulta = consultaRepository.getReferenceById(datos.idConsulta());
         consulta.cancelar(datos.motivo());
     }

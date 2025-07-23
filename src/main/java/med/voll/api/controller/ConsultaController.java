@@ -1,5 +1,7 @@
 package med.voll.api.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import med.voll.api.domain.consulta.DatosCancelamientoConsulta;
 import med.voll.api.domain.consulta.DatosDetalleConsulta;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/consultas")
+@SecurityRequirement(name = "bearer-key")
 public class ConsultaController {
 
     @Autowired
@@ -21,10 +24,8 @@ public class ConsultaController {
     @PostMapping
     @Transactional
     public ResponseEntity reservar(@RequestBody @Valid DatosReservaConsulta datos) {
-
-        reservaDeConsultas.reservar(datos);
-
-        return ResponseEntity.ok(new DatosDetalleConsulta(null, null, null, null));
+        var detallesConsulta = reservaDeConsultas.reservar(datos);
+        return ResponseEntity.ok(detallesConsulta);
     }
 
     @DeleteMapping
@@ -35,4 +36,5 @@ public class ConsultaController {
         return ResponseEntity.noContent().build();
 
     }
+
 }
